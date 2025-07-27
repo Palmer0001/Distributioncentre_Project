@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Item List - Clothes Warehouse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #2F4F4F, #0F2027);
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 980px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      color: #00FFA1;
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+
+    .form-select,
+    .btn {
+      border-radius: 10px;
+    }
+
+    .form-select {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid #00FFA1;
+    }
+
+    .form-select option {
+      color: #000;
+    }
+
+    .btn-sort {
+      background-color: #00FFA1;
+      color: #0F2027;
+      font-weight: 600;
+      border: none;
+    }
+
+    .btn-sort:hover {
+      background-color: #00cc88;
+    }
+
+    .table {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .table th {
+      background-color: #00FFA1;
+      color: #0F2027;
+    }
+
+    .table-hover tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: none;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .d-flex.flex-md-row {
+        flex-direction: column !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📦 Clothes Inventory List</h2>
+
+  <!-- ✅ Success Message -->
+  <div id="successMsg" class="alert alert-success text-center d-none" role="alert">
+    ✅ Item added successfully!
+  </div>
+
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+    <select id="brandFilter" class="form-select w-100 w-md-50" onchange="filterTable()">
+      <option value="">– Filter by Brand –</option>
+      <option value="Dior">Dior</option>
+      <option value="Stone Island">Stone Island</option>
+      <option value="Balenciaga">Balenciaga</option>
+    </select>
+    <button class="btn btn-sort" onclick="sortByBrand()">Sort by Brand</button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover" id="itemTable">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Brand</th>
+          <th>Year</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody id="itemBody">
+        <!-- Dynamic content inserted here -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function populateTable(items) {
+    const tbody = document.getElementById("itemBody");
+    tbody.innerHTML = "";
+
+    items.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${item.brand}</td>
+        <td>${item.year}</td>
+        <td>$${item.price}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function filterTable() {
+    const brand = document.getElementById("brandFilter").value;
+    const rows = document.querySelectorAll("#itemTable tbody tr");
+    rows.forEach(row => {
+      const cell = row.children[1].textContent;
+      row.style.display = brand === "" || cell === brand ? "" : "none";
+    });
+  }
+
+  function sortByBrand() {
+    const table = document.querySelector("#itemTable tbody");
+    [...table.rows]
+      .sort((a, b) => a.cells[1].textContent.localeCompare(b.cells[1].textContent))
+      .forEach(row => table.appendChild(row));
+  }
+
+  const allItems = JSON.parse(localStorage.getItem("clothingItems")) || [];
+  populateTable(allItems);
+
+  if (localStorage.getItem('addSuccess') === 'true') {
+    document.getElementById('successMsg').classList.remove('d-none');
+    localStorage.removeItem('addSuccess');
+  }
+</script>
+
+</body>
+</html>

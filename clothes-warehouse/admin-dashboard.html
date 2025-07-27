@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #2F4F4F, #0F2027);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .admin-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 900px;
+      width: 100%;
+      color: #fff;
+    }
+
+    .admin-card h2 {
+      color: #00FFA1;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+
+    .btn-admin {
+      background-color: #00FFA1;
+      color: #0F2027;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      margin: 10px;
+    }
+
+    .btn-admin:hover {
+      background-color: #00cc88;
+    }
+
+    .btn-delete {
+      background-color: #D8414D;
+      border: none;
+      color: #fff;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .btn-delete:hover {
+      background-color: #c62828;
+    }
+
+    ul.list-group {
+      background: transparent;
+      text-align: left;
+    }
+
+    .list-group-item {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border: none;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .form-label, .form-select, .form-control {
+      text-align: left;
+    }
+
+    .alert-success, .alert-danger {
+      font-weight: 500;
+      margin-top: 15px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 576px) {
+      .admin-card {
+        padding: 30px 20px;
+      }
+
+      .btn-admin {
+        width: 100%;
+        margin-bottom: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-card">
+  <h2><i class="bi bi-person-gear me-2"></i>Admin Dashboard</h2>
+
+  <div class="mb-4">
+    <a href="add-item.html" class="btn btn-admin me-2">
+      <i class="bi bi-plus-circle-fill"></i> Add Item
+    </a>
+    <a href="item-list.html" class="btn btn-admin">
+      <i class="bi bi-card-list"></i> View Items
+    </a>
+  </div>
+
+  <h5 class="text-light mb-3">Delete Items</h5>
+  <ul class="list-group" id="adminList"></ul>
+
+  <hr class="text-white my-4">
+
+  <h5 class="text-light mb-3">Request Item from Distribution Centre</h5>
+  <form onsubmit="handleRequest(event)">
+    <div class="mb-3 text-start">
+      <label for="brand" class="form-label">Select Brand</label>
+      <select id="brand" class="form-select" required>
+        <option value="">Choose brand</option>
+        <option>Adidas</option>
+        <option>Nike</option>
+        <option>Zara</option>
+        <option>Puma</option>
+      </select>
+    </div>
+    <div class="mb-3 text-start">
+      <label for="itemName" class="form-label">Item Name</label>
+      <input type="text" class="form-control" id="itemName" placeholder="e.g. Hoodie" required>
+    </div>
+    <button type="submit" class="btn btn-admin w-100">Request Item</button>
+  </form>
+
+  <div id="msgBox"></div>
+</div>
+
+<script>
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  if (!currentUser || currentUser.role !== "admin") {
+    alert("Unauthorized access. Admins only!");
+    window.location.href = "index.html";
+  }
+
+  const items = JSON.parse(localStorage.getItem("clothingItems")) || [];
+  const adminList = document.getElementById("adminList");
+  const msgBox = document.getElementById("msgBox");
+
+  function showItems() {
+    adminList.innerHTML = "";
+    if (items.length === 0) {
+      adminList.innerHTML = `<li class="list-group-item text-center text-light">No items available.</li>`;
+    } else {
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.innerHTML = `
+          <span><strong>${item.brand}</strong> ${item.name} – $${item.price} (${item.year})</span>
+          <button class="btn-delete" onclick="deleteItem(${index})">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+        `;
+        adminList.appendChild(li);
+      });
+    }
+  }
+
+  showItems();
+
+  function deleteItem(index) {
+    items.splice(index, 1);
+    localStorage.setItem("clothingItems", JSON.stringify(items));
+    msgBox.innerHTML = `<div class="alert alert-success text-center">✅ Item deleted successfully.</div>`;
+    setTimeout(() => location.reload(), 1000);
+  }
+
+  function handleRequest(e) {
+    e.preventDefault();
+    const brand = document.getElementById("brand").value.trim();
+    const itemName = document.getElementById("itemName").value.trim();
+
+    let centres = JSON.parse(localStorage.getItem("distributionCentres")) || [];
+
+    let found = false;
+    for (let centre of centres) {
+      for (let item of centre.items) {
+        if (item.brand.toLowerCase() === brand.toLowerCase() && item.name.toLowerCase() === itemName.toLowerCase() && item.quantity > 0) {
+          item.quantity--;
+          found = true;
+
+          // Add item to clothingItems (simulate "adding to warehouse")
+          items.push({
+            brand: brand,
+            name: itemName,
+            price: 0,
+            year: new Date().getFullYear()
+          });
+
+          localStorage.setItem("clothingItems", JSON.stringify(items));
+          localStorage.setItem("distributionCentres", JSON.stringify(centres));
+
+          msgBox.innerHTML = `<div class="alert alert-success text-center">✅ "${itemName}" from ${centre.name} added to warehouse.</div>`;
+          showItems();
+          return;
+        }
+      }
+    }
+
+    msgBox.innerHTML = `<div class="alert alert-danger text-center">❌ Item not available in any distribution centre.</div>`;
+  }
+</script>
+
+</body>
+</html>
